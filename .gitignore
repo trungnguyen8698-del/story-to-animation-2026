@@ -1,0 +1,21 @@
+# API keys — never commit
+.env
+config.json
+
+# Generated output — too large for git
+characters/
+backgrounds/
+composites/
+clips/
+final_animation.mp4
+concat.txt
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.skill
+
+# OS
+.DS_Store
+Thumbs.db
