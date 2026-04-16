@@ -1,134 +1,117 @@
-# Story-to-Animation Pipeline
+# EnigmaMind Video Pipeline
 
-Biến một câu chuyện ý tưởng thành video hoạt hình AI hoàn chỉnh trong 5 bước,
-chạy trực tiếp với Claude + kie.ai.
+Biến một chủ đề triết học thành video YouTube hoàn chỉnh cho kênh EnigmaMind trong 5 bước, chạy trực tiếp với Claude Code + kie.ai.
 
 ---
 
 ## Pipeline Overview
 
-```
-Logline → story.md → characters.json / backgrounds.json → images → shots.json → video clips → final_animation.mp4
-  Step 1     Step 2            Step 3 (script)            Step 4      Step 5 (script)
-```
+Chủ đề → script.md → scenes.json / visuals.json → ảnh tượng đá → shots.json → video clips → final_video.mp4
+  Bước 1     Bước 2           Bước 3 (script)          Bước 4        Bước 5 (script)
 
 | Bước | Skill | Công cụ | Output |
 |------|-------|---------|--------|
-| 1 | `generating-story-from-logline` | Claude | `story.md` |
-| 2 | `extracting-characters-and-backgrounds` | Claude | `characters.json`, `backgrounds.json` |
-| 3 | `generating-character-and-background-images` | Script + kie.ai | `./characters/*.png`, `./backgrounds/*.png` |
-| 4 | `creating-shot-list` | Claude | `shots.json` |
-| 5 | `generating-composite-and-video` | Script + kie.ai | `./clips/*.mp4` → `final_animation.mp4` |
+| 1 | 01-generating-script-from-topic | Claude | script.md |
+| 2 | 02-extracting-scenes-and-visuals | Claude | scenes.json, visuals.json |
+| 3 | 03-generating-visual-images | Script + kie.ai | ./visuals/*.png |
+| 4 | 04-creating-shot-list | Claude | shots.json |
+| 5 | 05-generating-composite-and-video | Script + kie.ai | ./clips/*.mp4 → final_video.mp4 |
 
 ---
 
-## Yêu cầu
+## Visual Identity EnigmaMind
+
+Mọi hình ảnh đều theo phong cách thống nhất:
+- Tượng đá cẩm thạch đen trắng, phong cách Hy Lạp / La Mã cổ điển
+- Chiaroscuro cinematic — ánh sáng tương phản cao
+- Nền đen tuyệt đối — pure black background
+- Kết cấu thô — rough stone, visible chisel marks
+- Tông triết học — trầm tư, nội tâm, timeless
+
+---
+
+## Yêu Cầu
 
 - Python 3.8+
-- FFmpeg (cho bước merge)
-- API keys: [kie.ai](https://kie.ai) + [imgbb](https://api.imgbb.com)
+- FFmpeg
+- API keys: kie.ai + imgbb
 
-```bash
+Cài dependencies:
 pip install -r requirements.txt
-```
 
-FFmpeg:
-```bash
-# Mac
-brew install ffmpeg
-
-# Windows
-winget install ffmpeg
-
-# Linux
-sudo apt install ffmpeg
-```
+Cài FFmpeg:
+Mac: brew install ffmpeg
+Windows: winget install ffmpeg
 
 ---
 
-## Cài đặt
+## Cài Đặt
 
-```bash
-# 1. Clone repo
-git clone https://github.com/your-username/story-to-animation.git
-cd story-to-animation
+1. Clone repo:
+git clone https://github.com/trungnguyen8698-del/story-to-animation-2026.git
+cd story-to-animation-2026
 
-# 2. Cài dependencies
+2. Cài dependencies:
 pip install -r requirements.txt
 
-# 3. Tạo .env
+3. Tạo file .env:
 cp .env.example .env
-# Mở .env và điền KIE_API_TOKEN + IMGBB_API_KEY
+Mở .env và điền KIE_API_TOKEN và IMGBB_API_KEY
 
-# 4. Cài skills vào Claude
-# Copy thư mục skills/ vào ~/.claude/skills/
-```
+4. Cài skills vào Claude Code:
+cp -r skills/* ~/.claude/skills/
 
 ---
 
-## Sử dụng
+## Sử Dụng
 
-### Bước 1–2: Dùng Claude
+Bước 1 và 2 — dùng Claude Code:
+Nhắn với Claude: "Tạo script EnigmaMind về chủ đề [chủ đề của bạn]"
+Claude tự động dùng skill, dừng lại chờ bạn duyệt sau mỗi bước.
 
-Paste SKILL.md tương ứng vào Claude, cung cấp logline và để Claude viết story + extract characters/backgrounds.
-
-Mỗi bước Claude sẽ dừng lại và chờ bạn duyệt trước khi tiếp tục.
-
-### Bước 3: Generate ảnh
-
-```bash
+Bước 3 — generate ảnh:
 cd /path/to/your/project
-python ~/.claude/skills/generating-character-and-background-images/scripts/generate_images.py
-```
+python ~/.claude/skills/03-generating-visual-images/scripts/generate_images.py
 
-### Bước 4: Dùng Claude
+Bước 4 — dùng Claude Code:
+Nhắn: "Tạo shot list EnigmaMind từ scenes.json và visuals đã có"
 
-Paste SKILL.md Step 4 vào Claude để tạo shots.json.
+Bước 5 — generate video:
+Từng shot:
+python ~/.claude/skills/05-generating-composite-and-video/scripts/generate_videos.py --shot shot_001
 
-### Bước 5: Generate video
+Tất cả cùng lúc:
+python ~/.claude/skills/05-generating-composite-and-video/scripts/generate_videos.py
 
-```bash
-# Bulk mode — tất cả shot cùng lúc
-python ~/.claude/skills/generating-composite-and-video/scripts/generate_videos.py
-
-# Per-shot mode — từng shot một (để duyệt từng clip)
-python ~/.claude/skills/generating-composite-and-video/scripts/generate_videos.py --shot shot_001
-python ~/.claude/skills/generating-composite-and-video/scripts/generate_videos.py --shot shot_002
-
-# Merge thành video cuối
-python ~/.claude/skills/generating-composite-and-video/scripts/merge_clips.py
-```
+Merge thành video cuối:
+python ~/.claude/skills/05-generating-composite-and-video/scripts/merge_clips.py
 
 ---
 
-## Cấu trúc thư mục project
+## Cấu Trúc Thư Mục Project
 
-```
-my-animation-project/
-├── .env                    # API keys (không commit)
-├── story.md                # Kịch bản (Step 1)
-├── characters.json         # Character prompts + image_url (Step 2-3)
-├── backgrounds.json        # Background prompts + image_url (Step 2-3)
-├── shots.json              # Shot list + veo_prompts (Step 4)
-├── characters/             # Reference images 1:1 (Step 3)
-├── backgrounds/            # Background images 16:9 (Step 3)
-├── composites/             # Composited scene images (Step 5)
-├── clips/                  # Video clips per shot (Step 5)
-└── final_animation.mp4     # Output cuối (Step 5)
-```
+my-enigmamind-video/
+├── .env
+├── script.md
+├── scenes.json
+├── visuals.json
+├── visuals_with_prompts.json
+├── shots.json
+├── visuals/
+├── clips/
+└── final_video.mp4
 
 ---
 
 ## Tips
 
-- **Consistency**: Mô tả nhân vật thật chi tiết trong mọi veo_prompt (màu sắc, trang phục, đặc điểm nổi bật)
-- **Reuse backgrounds**: Dùng lại cùng bg_id cho nhiều scene → tiết kiệm thời gian generate
-- **Per-shot mode**: Dùng `--shot` để duyệt từng clip trước khi tiếp tục
-- **Retry**: Script tự retry 3 lần nếu API lỗi tạm thời
-- **Re-run safe**: Script bỏ qua file đã tồn tại — re-run an toàn bất cứ lúc nào
+- Kiểm tra từng bước trước khi tiếp tục — mỗi skill sẽ hỏi bạn duyệt
+- Reuse visuals: nhiều cảnh có thể dùng cùng 1 ảnh để tiết kiệm API calls
+- Per-shot mode: dùng --shot để xem từng clip trước khi merge
+- CapCut: thêm voiceover và nhạc nền sau khi có final_video.mp4
 
 ---
 
 ## License
 
-MIT
+MIT — Fork từ ducloc99/story-to-animation-2026, chỉnh sửa cho kênh EnigmaMind.
