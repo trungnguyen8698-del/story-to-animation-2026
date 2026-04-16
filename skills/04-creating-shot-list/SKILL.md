@@ -1,114 +1,86 @@
 ---
-name: creating-shot-list
-description: >
-  Reads story.md, characters.json, and backgrounds.json to decompose the story
-  into individual 8-second shots. Each shot maps to specific character IDs, a
-  background ID, camera movement, action description, and a self-contained Veo 3
-  video-generation prompt. Saves output as shots.json. Part of the
-  Story-to-Animation pipeline (Step 4 of 5). Use when story and asset JSON files
-  exist and the user wants to create the shot-by-shot breakdown for video
-  generation. After generating shots.json, ALWAYS present the output and wait
-  for explicit user approval. Do NOT automatically trigger the next pipeline step.
+name: 04-creating-shot-list
+description: Bước 4 — Kết hợp scenes.json và visuals_with_prompts.json để tạo shots.json hoàn chỉnh với Veo video prompts cho từng cảnh. Output là shots.json để dùng ở Bước 5.
 ---
 
-# Shot List Creation
+# Bước 4 — Tạo Shot List + Veo Prompts (EnigmaMind)
 
-Decompose the story into discrete 8-second shots mapped to asset IDs and Veo 3
-generation prompts. Save as `shots.json`.
+## Đầu vào
+- scenes.json từ Bước 2
+- visuals_with_prompts.json từ Bước 3
+- script.md để lấy voiceover text
 
-## Instructions
+## Nhiệm vụ
+Tạo shots.json — file điều phối toàn bộ video, mỗi shot chứa đủ thông tin để:
+1. Generate video clip từ ảnh
+2. Ghép voiceover đúng thời điểm
 
-1. Read `story.md`, `characters.json`, and `backgrounds.json`.
-2. Break each scene into **1–3 shots** of exactly 8 seconds each.
-3. Scale total shots to match target duration from story.md (see table below).
-4. Assign sequential IDs: `shot_001`, `shot_002`, ...
+## Output Format — shots.json
 
-| Target length | Shots to create |
-|---------------|----------------|
-| ~30 seconds   | 3–4 shots      |
-| ~60 seconds   | 7–8 shots      |
-| ~2 minutes    | 15 shots       |
-| ~3–5 minutes  | 20–37 shots    |
+Mỗi shot có cấu trúc:
+shot_id: shot_001
+scene_id: scene_001
+script_section: HOOK
+voiceover_text: (câu script tiếng Việt cho cảnh này)
+duration_seconds: 8
+visual_id: v001
+image_url: (url ảnh từ visuals_with_prompts.json)
+camera_move: slow_push_in
+veo_prompt: (xem format bên dưới)
+transition: dissolve
 
-5. For each shot:
-   - **characters**: List of `character_id`s present (must match characters.json IDs)
-   - **background**: The `bg_id` for this location (must match backgrounds.json IDs)
-   - **action**: Clear visual description of what happens in this 8-second clip
-   - **camera_movement**: e.g., `"static wide shot"`, `"slow dolly-in"`, `"pan left"`, `"close-up on face"`, `"tracking shot"`
-   - **dialogue**: Spoken line if any, or `""` if none
-   - **mood**: Emotional tone
-   - **veo_prompt**: Self-contained Veo 3 generation prompt (see format below)
+## Camera Move Options
 
-## Veo Prompt Format
+slow_push_in — tiến chậm vào chủ thể — dùng cho Hook, điểm nhấn
+slow_orbit_right — bay vòng sang phải — dùng cho Reveal, introduce
+gentle_tilt_up — ngước lên chậm — dùng cho Resolution, khai ngộ
+static_light_shift — đứng yên ánh sáng thay đổi — dùng cho Contemplation
+slow_pull_back — lùi ra xa — dùng cho Outro, kết thúc
+static — hoàn toàn tĩnh — dùng khi voiceover nặng cần tập trung nghe
 
-Each `veo_prompt` must be fully self-contained — describe the shot as if standalone.
-Do NOT use asset IDs (char_001, bg_001) — Veo reads this directly.
+## Veo Prompt Template
 
-Pattern:
-```
-[Art style], [shot type + camera movement], [character description + action],
-[setting description], [lighting and mood], [duration hint]
-```
+[STATUE_DESCRIPTION] on pure black background, cinematic [CAMERA_MOVE] motion,
+black and white marble sculpture aesthetic, Classical Greek Roman style,
+chiaroscuro lighting with [LIGHTING_DIRECTION],
+[ATMOSPHERIC_DETAIL], 4K cinematic quality, slow motion,
+philosophical contemplative atmosphere, dust particles in light beam,
+no color, monochromatic stone texture
 
-Example:
-```
-Pixar-style 3D animation, slow dolly-in from wide to medium shot, a 12-year-old
-girl with curly auburn hair and teal jacket steps into a magical sunlit forest
-clearing, bioluminescent mushrooms and golden sunbeams, sense of wonder, 8 seconds
-```
+## Atmospheric Details theo Emotion
 
-## Output File: shots.json
+isolation = silence and stillness, frozen in time
+conflict = subtle light flicker suggesting inner turmoil
+enlightenment = light intensifying gradually from above
+despair = shadows deepening, minimal highlight
+transformation = hairline crack forming on stone surface, light emerging
+acceptance = warm light slowly washing over the figure
+contemplation = dust motes floating gently in a single shaft of light
 
-```json
-{
-  "shots": [
-    {
-      "shot_id": "shot_001",
-      "scene_number": 1,
-      "scene_title": "Scene title from story.md",
-      "shot_number_in_scene": 1,
-      "duration_seconds": 8,
-      "characters": ["char_001"],
-      "background": "bg_001",
-      "action": "Luna steps into the forest clearing, eyes wide with wonder",
-      "camera_movement": "Slow dolly-in from wide shot to medium shot",
-      "dialogue": "",
-      "mood": "Wonder and discovery",
-      "veo_prompt": "Pixar-style 3D animation, slow dolly-in from wide to medium shot, a 12-year-old girl with curly auburn hair and teal adventure jacket steps cautiously into a magical forest clearing with bioluminescent mushrooms, warm golden sunbeams filter through ancient oak trees, sense of awe and discovery, 8 seconds"
-    }
-  ]
-}
-```
+## Ví dụ Veo Prompt hoàn chỉnh
 
-## Review Gate (MANDATORY)
+Marble bust sculpture with head bowed and eyes closed on pure black background,
+cinematic slow push in motion, black and white marble sculpture aesthetic,
+Classical Greek Roman style, chiaroscuro lighting with harsh side-angle single source,
+silence and stillness frozen in time, 4K cinematic quality, slow motion,
+philosophical contemplative atmosphere, dust particles in shaft of light,
+no color, monochromatic rough stone texture
 
-After saving `shots.json`, present this EXACTLY:
+## Quy tắc Ghép Shot
 
-```
-✅ Shot List Creation complete. Output saved to shots.json.
+- Đầu mỗi section (HOOK, CONCEPT, CONFLICT, RESOLUTION, OUTRO): dùng slow_push_in hoặc slow_orbit_right
+- Giữa section: static hoặc static_light_shift để không phân tán khỏi voiceover
+- Climax đỉnh điểm CONFLICT: static với atmospheric transformation
+- Outro cuối cùng: slow_pull_back rồi fade to black
 
-📋 Summary:
-- Total shots: [X]
-- Estimated total length: [X shots × 8 sec = X seconds (~X min)] ✓
-- Scenes covered: [X]
-- Characters referenced: [list unique char_ids used]
-- Backgrounds referenced: [list unique bg_ids used]
+## Kiểm Tra Trước Khi Lưu
+- Mỗi shot có đủ visual_id và image_url
+- Tổng duration_seconds khớp với độ dài script
+- Veo prompt không vượt quá 200 từ
+- Transition: dissolve cho phần trầm tư, cut cho điểm nhấn mạnh
 
-👉 Please review shots.json. Key things to check:
-  - Does each shot's action match the story flow?
-  - Are veo_prompts detailed and fully self-contained (no asset ID references)?
-  - Are all character_ids and bg_ids valid (match the JSON files)?
-  - Is the pacing right (shots per scene)?
-  - Does total length match the target duration?
+## Sau khi hoàn thành
+Hiển thị bảng tóm tắt toàn bộ shot list:
+| Shot | Section | Duration | Camera | Visual |
 
-You can:
-  - Approve → say "approved" or "proceed"
-  - Request changes → e.g., "add a close-up of Luna's face after shot_003"
-  - Edit shots.json directly → tell me when done
-
-⏸️ Waiting for your approval before generating video clips.
-```
-
-**NEVER** proceed to the next skill automatically. Wait for explicit approval.
-
-Allow iterative refinement — add, remove, or reorder shots as needed.
+Hỏi: "Shot list đã sẵn sàng với [X] shots, tổng [Y] phút. Bạn muốn điều chỉnh gì không trước khi generate video (Bước 5)?"
