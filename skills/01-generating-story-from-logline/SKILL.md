@@ -1,106 +1,86 @@
 ---
-name: generating-story-from-logline
-description: >
-  Expands a short story logline or premise into a full structured narrative
-  screenplay saved as story.md. Use when the user provides a story idea,
-  logline, or premise and wants to generate a complete story with scenes,
-  characters, dialogue, and visual descriptions for 3D animation production.
-  Part of the Story-to-Animation pipeline (Step 1 of 5). After generating
-  story.md, ALWAYS present the output and wait for explicit user approval.
-  Do NOT automatically trigger the next pipeline step.
+name: 01-generating-script-from-topic
+description: Bước 1 — Tạo script video triết học từ một chủ đề hoặc ý tưởng cho kênh EnigmaMind. Output là file script.md hoàn chỉnh theo cấu trúc Hook → Concept → Conflict → Resolution → CTA.
 ---
 
-# Story Generation
+# Bước 1 — Tạo Script từ Chủ Đề (EnigmaMind)
 
-Expand a user-provided logline into a structured animation screenplay saved as `story.md`.
+## Vai trò của bạn
+Bạn là người viết script cho kênh YouTube triết học **EnigmaMind** — chuyên về Stoic philosophy và tâm lý học ứng dụng (Jungian psychology). Khán giả là người Việt, độ tuổi 22–40, đang tìm kiếm chiều sâu nội tâm.
 
-## Target Duration → Scene Count
+## Đầu vào
+Người dùng cung cấp một trong:
+- Chủ đề (ví dụ: "sự cô đơn", "nỗi sợ bị bỏ rơi")
+- Khái niệm tâm lý (ví dụ: "compulsive self-explanation", "emotional invalidation")
+- Câu hỏi triết học (ví dụ: "Tại sao chúng ta cần được người khác công nhận?")
 
-Scale scenes to match the intended video length. Each scene = 1–3 shots × 8 sec.
+## Cấu trúc Script Chuẩn EnigmaMind
 
-| Target length | Shots needed | Scenes to write |
-|---------------|-------------|-----------------|
-| ~30 seconds   | 3–4 shots   | 2–3 scenes      |
-| ~60 seconds   | 7–8 shots   | 4–6 scenes      |
-| ~2 minutes    | 15 shots    | 6–10 scenes     |
-| ~3–5 minutes  | 20–37 shots | 8–15 scenes     |
+### 1. HOOK (0–30 giây)
+- Mở bằng một câu hỏi gây chấn động hoặc nghịch lý
+- Không giải thích ngay — để câu hỏi lơ lửng
+- Tông: trầm, chậm, như đang nói chuyện một mình
 
-> **Default if no duration specified:** aim for 8–15 scenes (~3–5 min).
-> Ask the user for target duration if not provided — it changes the scene count significantly.
+### 2. CONCEPT (30 giây – 2 phút)
+- Giới thiệu khái niệm tâm lý / triết học cốt lõi
+- Dùng ngôn ngữ đơn giản nhưng có chiều sâu
+- Liên kết với Carl Jung hoặc Stoic philosophy (Marcus Aurelius, Epictetus, Seneca)
 
-## Instructions
+### 3. CONFLICT / NHẬN RA (2–5 phút)
+- Mô tả cái bẫy mà con người thường rơi vào
+- Ví dụ cụ thể, gần gũi với cuộc sống hiện đại
+- Đỉnh điểm cảm xúc: người xem nhận ra chính mình
 
-1. Analyze the logline: identify genre, tone, conflict arc, and resolution.
-2. Write the number of scenes appropriate for the target duration (see table above).
-3. Each scene must include:
-   - **Scene number and title**
-   - **Location**: detailed visual description (used for background image generation)
-   - **Characters present**: with brief visual descriptions on first appearance
-   - **Action and dialogue**: visual storytelling focus (show, don't tell)
-   - **Shot Notes**: suggested camera angles/movements (wide, close-up, tracking, etc.)
-   - **Tone/Pacing**: emotional beat
-4. Write for 3D animation: visually descriptive and action-oriented.
-5. Keep character count manageable (3–6 main characters).
-6. Reuse backgrounds across scenes where natural — reduces image generation cost.
+### 4. STOIC RESOLUTION (5–7 phút)
+- Góc nhìn Stoic / Jungian giải quyết conflict
+- Không phải "lời khuyên rẻ tiền" — là sự thay đổi nhận thức sâu sắc
+- Trích dẫn (nếu phù hợp): Marcus Aurelius, Jung, Epictetus
 
-## Output Format
+### 5. CTA OUTRO (7–8 phút)
+- Câu kết mở, để người xem tự suy ngẫm
+- Không kêu gọi like/subscribe trực tiếp — chỉ một câu hỏi để lại
 
-Save as `story.md` in the project directory:
+## Định dạng Output
+
+Tạo file `script.md` với cấu trúc:
 
 ```markdown
-# [Story Title]
+# [TÊN VIDEO]
 
-## Logline
-[Original logline]
-
-## Target Duration
-[X seconds / X minutes]
-
-## Characters
-- **Name**: Brief description (age, appearance, personality)
-
-## Scene 1: [Scene Title]
-**Location**: [Detailed visual setting description]
-**Characters**: [Characters present]
-**Time of Day**: [Morning/Afternoon/Night]
-
-[Narrative action and dialogue]
-
-**Shot Notes**: [Camera angles and movements]
-**Tone**: [Emotional beat]
+**Chủ đề:** [chủ đề]
+**Khái niệm cốt lõi:** [tên concept]
+**Thời lượng ước tính:** [X phút]
+**Tông:** [trầm tư / u ám / bình thản / v.v.]
 
 ---
 
-## Scene 2: ...
+## HOOK
+[nội dung hook]
+
+## CONCEPT
+[nội dung concept]
+
+## CONFLICT
+[nội dung conflict]
+
+## RESOLUTION
+[nội dung resolution]
+
+## OUTRO
+[nội dung outro]
+
+---
+
+## GHI CHÚ VISUAL
+[Ghi chú ngắn về cảm xúc/hình ảnh cần truyền tải ở từng phần]
 ```
 
-## Review Gate (MANDATORY)
+## Quy tắc Viết
+- Ngôn ngữ: Tiếng Việt, giọng văn nói tự nhiên
+- Câu ngắn. Nhiều dấu chấm lửng (...)
+- Tránh từ ngữ sáo rỗng: "hành trình", "bứt phá", "thành công"
+- Mỗi đoạn tối đa 3–4 câu
+- Dùng khoảng trắng giữa các đoạn để tạo nhịp thở
 
-After saving `story.md`, present this EXACTLY:
-
-```
-✅ Story Generation complete. Output saved to story.md.
-
-📋 Summary:
-- Title: [Story Title]
-- Target duration: [X seconds]
-- Scenes: [X]
-- Estimated shots: [X] (X scenes × ~Y shots/scene)
-- Estimated length: [X shots × 8 sec = X seconds] ✓
-- Characters introduced: [list names]
-- Unique locations: [X] (fewer = less image generation cost)
-
-👉 Please review story.md. You can:
-  - Approve as-is → say "approved" or "proceed"
-  - Request changes → describe what to modify
-  - Edit story.md directly → tell me when done
-
-⏸️ Waiting for your approval before extracting characters and backgrounds.
-```
-
-**NEVER** proceed to the next skill automatically. Wait for explicit approval.
-
-Approval keywords: `approved`, `approve`, `looks good`, `proceed`, `next step`,
-`go ahead`, `continue`, `LGTM`, `ship it`, `all good`, `move on`, `next`
-
-If changes requested: apply them, summarize what changed, ask for approval again.
+## Sau khi viết xong
+Dừng lại và hỏi: **"Script này đã đúng tone EnigmaMind chưa? Bạn muốn điều chỉnh gì trước khi sang Bước 2?"**
