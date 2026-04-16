@@ -1,102 +1,99 @@
 ---
-name: generating-character-and-background-images
-description: >
-  Reads characters.json and backgrounds.json, then generates reference images
-  for each character and background using the kie.ai nano-banana-pro API.
-  Character images (1:1 aspect ratio) are saved to ./characters/ and background
-  images (16:9) to ./backgrounds/, named by their IDs (char_001.png, bg_001.png,
-  etc.). Each image is then uploaded to imgbb for permanent public hosting, and
-  the imgbb URL is written back as an image_url field in both JSON files — these
-  URLs are required by generate_videos.py. Part of the Story-to-Animation
-  pipeline (Step 3 of 5). Run scripts/generate_images.py to execute. Use when
-  both JSON prompt files exist and the user wants to generate the actual reference
-  images. After generating all images, ALWAYS present the output and wait for
-  explicit user approval. Do NOT automatically trigger the next pipeline step.
+name: 03-generating-visual-images
+description: Bước 3 — Đọc visuals.json và tạo prompts cho từng visual asset, sau đó chạy script Python để generate ảnh tự động. Output là ./visuals/*.png
 ---
 
-# Character & Background Image Generation
+# Bước 3 — Generate Hình Ảnh Visual (EnigmaMind)
 
-Generate reference images with kie.ai nano-banana-pro, host them on imgbb,
-and write permanent `image_url` fields back into the JSON files.
+## Đầu vào
+File `visuals.json` từ Bước 2.
 
-## Setup: .env
+## Visual Identity EnigmaMind — BẮT BUỘC áp dụng 100%
 
-On first run the script automatically creates a `.env` template in your project
-directory and exits. Open it, fill in your keys, then re-run:
+Core Style DNA:
+black and white marble statue, Classical Greek Roman sculpture style,
+rough unpolished stone texture, visible chisel marks,
+cinematic chiaroscuro lighting, pure black background,
+monochromatic palette, timeless philosophical mood,
+photorealistic stone material, museum quality sculpture photography
 
-```
-KIE_API_TOKEN=your_kie_api_key_here
-IMGBB_API_KEY=your_imgbb_api_key_here
-```
+Negative Keywords — LUÔN bao gồm:
+--no polished marble, shiny surface, colorful, vivid colors,
+modern CGI, 3D render, fantasy, floating text, watermark,
+photographic background, landscape, other figures, cartoon, anime,
+over-smooth, perfect skin, idealized beauty, white background
 
-- **KIE_API_TOKEN** — from [kie.ai](https://kie.ai) dashboard → API Keys
-- **IMGBB_API_KEY** — from [api.imgbb.com](https://api.imgbb.com) (free account)
-- Add `.env` to `.gitignore` — never commit API keys
-- Real environment variables always take precedence over `.env` values
+## Prompt Template
 
-A reference copy is at `assets/.env.example` in this skill's folder.
+Cho bust (tượng bán thân):
+[POSE_DESCRIPTION], marble bust sculpture, Classical Greek Roman style,
+rough stone texture with visible chisel marks, [LIGHTING_TYPE] chiaroscuro lighting,
+pure black background, black and white, cinematic composition,
+philosophical contemplative mood, museum photography
+--ar 16:9 --v 6.1 --style raw --no polished marble, shiny, colorful, CGI, watermark
 
-## Prerequisites
+Cho full_figure (toàn thân):
+[POSE_DESCRIPTION], full marble figure sculpture, Classical Greek Roman style,
+rough unpolished stone, [LIGHTING_TYPE] dramatic lighting, pure black background,
+monochromatic, cinematic wide shot, stoic philosophical mood
+--ar 16:9 --v 6.1 --style raw --no polished marble, shiny, colorful, CGI, watermark
 
-- `characters.json` and `backgrounds.json` must exist (from Skill 2)
-- `.env` in project directory with both keys filled in (auto-created on first run)
-- `pip install requests`
+Cho hands (chỉ bàn tay):
+[POSE_DESCRIPTION], marble hands sculpture detail, Classical Greek Roman style,
+rough stone texture, [LIGHTING_TYPE] directional light, pure black background,
+extreme close-up, black and white, symbolic composition
+--ar 16:9 --v 6.1 --style raw --no polished marble, shiny, colorful, CGI, watermark
 
-## Running the Script
+Cho two_figures (hai tượng):
+[POSE_DESCRIPTION], two marble figures sculpture, Classical Greek Roman style,
+rough stone texture, [LIGHTING_TYPE] chiaroscuro, pure black background,
+monochromatic, cinematic framing, tension and contrast
+--ar 16:9 --v 6.1 --style raw --no polished marble, shiny, colorful, CGI, watermark
 
-```bash
+Cho abstract_fragment:
+[POSE_DESCRIPTION], marble sculpture fragment detail, Classical Greek Roman style,
+rough broken stone, [LIGHTING_TYPE] dramatic lighting, pure black background,
+abstract close-up, black and white, philosophical symbolism
+--ar 16:9 --v 6.1 --style raw --no polished marble, shiny, colorful, CGI, watermark
+
+## Lighting Type
+
+enlightenment = single overhead directional
+conflict = harsh side-angle single source
+darkness = minimal low-key under-lit
+dawn = soft gradual side-sweeping
+
+## Tạo visuals_with_prompts.json
+
+Đọc visuals.json, điền prompt cho từng item, lưu thành visuals_with_prompts.json.
+
+Ví dụ một item:
+visual_id: v001
+statue_type: bust
+pose: head bowed, eyes closed, expression of quiet despair
+lighting: conflict
+prompt: marble bust sculpture, head bowed with eyes closed, expression of quiet despair, Classical Greek Roman style, rough stone texture with visible chisel marks, harsh side-angle single source chiaroscuro lighting, pure black background, black and white, cinematic composition, philosophical contemplative mood --ar 16:9 --v 6.1 --style raw --no polished marble, shiny surface, colorful, modern CGI, 3D render, fantasy, watermark
+used_in_scenes: scene_001, scene_003
+image_url: (để trống, script sẽ điền)
+
+## Chạy Script Generate
+
 cd /path/to/your/project
-python ~/.claude/skills/generating-character-and-background-images/scripts/generate_images.py
-```
+python ~/.claude/skills/03-generating-visual-images/scripts/generate_images.py
 
-### What the script does per image:
+Script sẽ:
+1. Đọc visuals_with_prompts.json
+2. Gọi kie.ai API để generate từng ảnh
+3. Lưu vào ./visuals/v001.png, ./visuals/v002.png, ...
+4. Cập nhật image_url trong JSON
 
-1. **Generate** — POST to `jobs/createTask` (model: `nano-banana-pro`, aspect_ratio, resolution: `1K`)
-2. **Poll** — GET `jobs/recordInfo?taskId=...` until `state: success`; extract `resultUrls[0]`
-3. **Download** — save PNG to `./characters/{id}.png` or `./backgrounds/{id}.png`
-4. **Upload to imgbb** — POST base64-encoded PNG to `api.imgbb.com/1/upload`; get permanent URL
-5. **Write back** — store imgbb URL as `image_url` in `characters.json` / `backgrounds.json`
+## Kiểm Tra Kết Quả
+- Nền đen tuyệt đối
+- Tượng đá thô, có dấu đục
+- Ánh sáng chiaroscuro đúng hướng
+- Không có màu sắc lạ
 
-Character images: **1:1** aspect ratio (reference sheets)
-Background images: **16:9** aspect ratio (cinematic wide shots)
+Nếu ảnh nào không đạt thêm negative keywords cụ thể và retry.
 
-If imgbb upload fails, the kie.ai URL is used as fallback (may not be permanent).
-
-## Regenerating Specific Images
-
-1. Update the `prompt` field in the JSON
-2. Delete the existing PNG (e.g., `./characters/char_001.png`)
-3. Re-run the script — it skips existing files, regenerates deleted ones
-
-## Important: image_url Fields
-
-After running, each JSON entry has an `image_url` field containing a permanent
-imgbb URL. **Skill 5 (`generate_videos.py`) reads these URLs** to generate
-composite images — do not delete or overwrite them.
-
-## Review Gate (MANDATORY)
-
-After all images are generated, present this EXACTLY:
-
-```
-✅ Image Generation complete.
-
-📋 Summary:
-- Character images: [X] generated → ./characters/
-  [char_001.png: "Name", char_002.png: "Name", ...]
-- Background images: [X] generated → ./backgrounds/
-  [bg_001.png: "Name", bg_002.png: "Name", ...]
-- Failed: [X] (list any failures)
-- image_url (imgbb) written to: characters.json, backgrounds.json
-
-👉 Please review the generated images. You can:
-  - Approve all → say "approved" or "proceed"
-  - Reject specific images → e.g., "regenerate char_001, the hair is wrong"
-    (update prompt in characters.json, delete the PNG, re-run script)
-  - Replace images manually → save your PNG as ./characters/char_001.png,
-    then tell me to upload it to imgbb to get a fresh image_url
-
-⏸️ Waiting for your approval before creating the shot list.
-```
-
-**NEVER** proceed to the next skill automatically. Wait for explicit approval.
+## Sau khi hoàn thành
+Hỏi: "Tất cả [X] visual đã generate xong. Bạn có muốn xem lại hoặc redo visual nào không trước khi sang Bước 4?"
