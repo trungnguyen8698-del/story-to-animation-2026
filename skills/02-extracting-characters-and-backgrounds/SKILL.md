@@ -1,105 +1,82 @@
 ---
-name: extracting-characters-and-backgrounds
-description: >
-  Reads story.md and extracts all unique characters and background locations.
-  Generates detailed Pixar-style 3D image-generation prompts for each, saving
-  them as characters.json and backgrounds.json. Part of the Story-to-Animation
-  pipeline (Step 2 of 5). Use when story.md exists and the user wants to prepare
-  character and background prompts for AI image generation. After generating
-  both JSON files, ALWAYS present the output and wait for explicit user approval.
-  Do NOT automatically trigger the next pipeline step.
+name: 02-extracting-scenes-and-visuals
+description: Bước 2 — Đọc script.md và trích xuất danh sách cảnh (scenes) cùng visual concept cho từng cảnh. Output là scenes.json và visuals.json để dùng ở Bước 3.
 ---
 
-# Character & Background Extraction
+# Bước 2 — Trích Xuất Cảnh và Visual Concept (EnigmaMind)
 
-Parse `story.md` to extract unique characters and locations, then write detailed
-image-generation prompts. Save as `characters.json` and `backgrounds.json`.
+## Đầu vào
+File `script.md` từ Bước 1.
 
-## Instructions
+## Nhiệm vụ
 
-### Characters
+### A. Phân tích script thành các cảnh (scenes)
+Mỗi cảnh = một đơn vị visual, thường tương ứng với 1–3 câu trong script hoặc một ý tưởng hoàn chỉnh.
 
-1. Identify every unique character mentioned across all scenes.
-2. For each, generate a detailed image prompt covering:
-   - Physical appearance (age, build, skin tone, hair, eyes)
-   - Clothing and accessories (era/setting-appropriate)
-   - Expression and pose (neutral, full body, for reference sheet)
-   - Art style suffix: `"3D animated character, Pixar-style rendering, full body, character reference sheet, white background, high detail, soft lighting"`
-3. Assign IDs sequentially: `char_001`, `char_002`, ...
-4. Record which scene numbers each character appears in.
+Trung bình một video 7–8 phút cần **25–40 cảnh**.
 
-### Backgrounds
+### B. Xác định visual concept cho từng cảnh
 
-1. Identify every unique location across all scenes.
-2. Deduplicate: same location across multiple scenes = same `bg_id`.
-3. For each, generate a detailed image prompt covering:
-   - Environment type (interior/exterior)
-   - Architectural or natural details
-   - Lighting conditions and time of day
-   - Mood and atmosphere
-   - Art style suffix: `"3D animated environment, cinematic wide shot, no characters, high detail, Pixar-style rendering"`
-4. Assign IDs sequentially: `bg_001`, `bg_002`, ...
-5. Record which scene numbers each background appears in.
+Với mỗi cảnh, xác định:
+- **Cảm xúc cốt lõi** (emotion): cô đơn / mâu thuẫn / khai ngộ / bình thản / v.v.
+- **Loại tượng** (statue_type):
+  - `bust` — tượng bán thân, tập trung vào khuôn mặt
+  - `full_figure` — toàn thân
+  - `hands` — chỉ bàn tay
+  - `abstract_fragment` — mảnh vỡ, chi tiết trừu tượng
+  - `two_figures` — hai tượng tương tác
+- **Tư thế / trạng thái** (pose): mô tả ngắn gọn bằng tiếng Anh
+- **Ánh sáng** (lighting):
+  - `enlightenment` — ánh sáng từ trên xuống (khai ngộ)
+  - `conflict` — ánh sáng từ bên hông (mâu thuẫn)
+  - `darkness` — ánh sáng từ dưới hoặc rất yếu (tối tăm)
+  - `dawn` — ánh sáng lan dần từ một phía (bình minh nhận thức)
 
-## Output Files
+## Output Format
 
-### characters.json
+### scenes.json
 ```json
-{
-  "characters": [
-    {
-      "character_id": "char_001",
-      "name": "Character Name",
-      "description": "Brief one-line description",
-      "prompt": "Full detailed image-generation prompt...",
-      "scenes_appearing": [1, 2, 3]
-    }
-  ]
-}
+[
+  {
+    "scene_id": "scene_001",
+    "script_section": "HOOK",
+    "script_text": "[câu script tương ứng]",
+    "duration_seconds": 8,
+    "emotion": "isolation",
+    "statue_type": "bust",
+    "pose": "head bowed, eyes closed, expression of quiet despair",
+    "lighting": "conflict",
+    "visual_note": "gợi cảm giác nặng nề, câu hỏi chưa có lời giải"
+  }
+]
 ```
 
-### backgrounds.json
+### visuals.json
+Danh sách các **visual asset duy nhất** cần tạo (gộp các cảnh dùng cùng visual):
 ```json
-{
-  "backgrounds": [
-    {
-      "bg_id": "bg_001",
-      "name": "Location Name",
-      "description": "Brief one-line description",
-      "prompt": "Full detailed image-generation prompt...",
-      "scenes_used_in": [1, 5, 7]
-    }
-  ]
-}
+[
+  {
+    "visual_id": "v001",
+    "statue_type": "bust",
+    "pose": "head bowed, eyes closed, expression of quiet despair",
+    "lighting": "conflict",
+    "used_in_scenes": ["scene_001", "scene_003"]
+  }
+]
 ```
 
-## Review Gate (MANDATORY)
+**Lưu ý quan trọng:** Gộp các cảnh có visual giống nhau để tiết kiệm số lần generate ảnh. Một video 35 cảnh thường chỉ cần 15–20 visual asset khác nhau.
 
-After saving both JSON files, present this EXACTLY:
+## Quy tắc Visual EnigmaMind
+- KHÔNG có nhân vật có tên, không có background phức tạp
+- Tất cả background đều là **pure black** — không cần tạo background riêng
+- Tượng KHÔNG bao giờ nhìn thẳng vào camera
+- Vết nứt (cracks) trên tượng = biểu tượng transformation → dùng cho climax
+- Ánh sáng = ý nghĩa: trên = khai ngộ, bên = mâu thuẫn, dưới = tối tăm
 
-```
-✅ Character & Background Extraction complete.
+## Sau khi tạo xong
+Hiển thị bảng tóm tắt:
+| Scene | Section | Emotion | Visual ID | Duration |
+|-------|---------|---------|-----------|----------|
 
-📋 Summary:
-- Characters extracted: [X] → saved to characters.json
-  [char_001: "Name", char_002: "Name", ...]
-- Backgrounds extracted: [X] → saved to backgrounds.json
-  [bg_001: "Name", bg_002: "Name", ...]
-
-👉 Please review both JSON files. Key things to check:
-  - Are all characters from the story captured?
-  - Are the image-generation prompts detailed enough?
-  - Are all unique locations identified (no duplicates, no missing)?
-  - Do the art style directives match your vision?
-
-You can:
-  - Approve both files → say "approved" or "proceed"
-  - Request changes → e.g., "make Luna's hair blonde", "add detail to bg_002"
-  - Edit the JSON files directly → tell me when done
-
-⏸️ Waiting for your approval before generating images.
-```
-
-**NEVER** proceed to the next skill automatically. Wait for explicit approval.
-
-Allow iterative refinement — update JSON, summarize changes, ask for approval again.
+Hỏi: **"Bạn có muốn điều chỉnh visual concept nào trước khi generate ảnh (Bước 3) không?"**
